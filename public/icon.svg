@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#047857" />
+      <stop offset="50%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#0f766e" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+    <linearGradient id="redAccent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f87171" />
+      <stop offset="100%" stop-color="#dc2626" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.3" />
+    </filter>
+  </defs>
+
+  <!-- App Icon Background (Squircle) -->
+  <rect width="512" height="512" rx="120" fill="url(#bgGrad)" />
+
+  <!-- Subtle Ethiopic circular border pattern -->
+  <circle cx="256" cy="256" r="210" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="4" stroke-dasharray="12 12" />
+
+  <!-- Golden Barbell Icon Symbol with Ethiopian Fitness Aesthetic -->
+  <g filter="url(#shadow)" transform="translate(0, 0)">
+    <!-- Center Grip Bar -->
+    <rect x="156" y="240" width="200" height="32" rx="16" fill="url(#goldGrad)" />
+    
+    <!-- Left Inner Weight Plate -->
+    <rect x="136" y="196" width="24" height="120" rx="12" fill="#ffffff" />
+    <!-- Left Outer Weight Plate -->
+    <rect x="96" y="166" width="32" height="180" rx="16" fill="url(#goldGrad)" />
+    <!-- Left Collar -->
+    <rect x="80" y="232" width="16" height="48" rx="8" fill="#e2e8f0" />
+
+    <!-- Right Inner Weight Plate -->
+    <rect x="352" y="196" width="24" height="120" rx="12" fill="#ffffff" />
+    <!-- Right Outer Weight Plate -->
+    <rect x="384" y="166" width="32" height="180" rx="16" fill="url(#goldGrad)" />
+    <!-- Right Collar -->
+    <rect x="416" y="232" width="16" height="48" rx="8" fill="#e2e8f0" />
+
+    <!-- Dynamic Heart / Energy Pulse Accent in Center -->
+    <circle cx="256" cy="256" r="42" fill="#ffffff" />
+    <path d="M256 276 L242 262 C230 250 230 238 238 230 C246 222 254 226 256 232 C258 226 266 222 274 230 C282 238 282 250 270 262 Z" fill="url(#redAccent)" />
+  </g>
+
+  <!-- Typography: Fit Ethiopia -->
+  <text x="256" y="420" text-anchor="middle" font-family="'Noto Sans Ethiopic', 'Inter', system-ui, sans-serif" font-weight="900" font-size="44" fill="#ffffff" letter-spacing="2">FIT ETHIOPIA</text>
+  <text x="256" y="460" text-anchor="middle" font-family="'Noto Sans Ethiopic', 'Inter', system-ui, sans-serif" font-weight="600" font-size="24" fill="#fef08a" letter-spacing="1">የጤና እና አካል ብቃት</text>
+</svg>

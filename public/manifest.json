@@ -1,0 +1,52 @@
+{
+  "name": "Fit Ethiopia - የጤና እና አካል ብቃት መመሪያ",
+  "short_name": "Fit Ethiopia",
+  "description": "የተሻለ አካል፣ የተሻለ ጤና፣ የተሻለ ሕይወት - ለኢትዮጵያውያን የተዘጋጀ የጤና እና አካል ብቃት መተግበሪያ",
+  "start_url": "/",
+  "id": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#064e3b",
+  "theme_color": "#059669",
+  "lang": "am",
+  "dir": "ltr",
+  "categories": ["health", "fitness", "lifestyle", "food"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "የምግብ ትንተና (Food Analyzer)",
+      "short_name": "ትንተና",
+      "description": "የኢትዮጵያ ምግቦችን ካሎሪና ንጥረ-ነገር ይተንትኑ",
+      "url": "/#food-analyzer",
+      "icons": [{ "src": "/icon.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "የ4-ቀን ልምምድ (Workouts)",
+      "short_name": "ልምምድ",
+      "description": "የዕለቱን የአካል ብቃት እንቅስቃሴ ይጀምሩ",
+      "url": "/#workouts",
+      "icons": [{ "src": "/icon.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "የውሃ መጠጫ ክትትል (Water)",
+      "short_name": "ውሃ",
+      "description": "የዕለቱን የውሃ መጠጫ ይመዝገቡ",
+      "url": "/#water-tracker",
+      "icons": [{ "src": "/icon.svg", "sizes": "192x192" }]
+    }
+  ]
+}
