@@ -1,444 +1,356 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { calculateBMI } from '../utils/fitnessCalculations';
 import { 
-  TrendingDown, 
   Flame, 
-  Droplet, 
+  Droplets, 
   Dumbbell, 
-  Utensils, 
-  Calendar, 
-  ArrowUpRight, 
-  Plus, 
-  Award, 
+  Target, 
+  Sparkles, 
+  BookOpen, 
+  Moon, 
+  Activity, 
+  Apple, 
+  Trophy, 
   CheckCircle2, 
-  Smile, 
-  Zap,
-  Target
+  CreditCard,
+  Play,
+  RotateCcw,
+  Check,
+  ChevronRight,
+  ShieldCheck,
+  Zap
 } from 'lucide-react';
 
 export const DashboardPage: React.FC = () => {
-  const { 
-    language, 
-    user, 
-    mealRecords, 
-    todayWaterMl, 
-    dailyWaterTargetMl, 
-    activityLogs, 
-    weeklyWorkoutsCompleted, 
-    habits, 
-    setActiveTab, 
-    addWaterMl 
-  } = useApp();
+  const { userProfile, waterLogs, mealLogs, workoutLogs } = useApp();
 
-  const bmiData = calculateBMI(
-    user.height, 
-    user.weight, 
-    user.startingWeight, 
-    user.targetWeight, 
-    user.goal
-  );
+  // Active Tab View
+  const [activeTab, setActiveTab] = useState<'overview' | 'science' | 'fasting' | 'pricing'>('overview');
+  const [goalMode, setGoalMode] = useState<'muscle' | 'fat_loss'>('muscle');
 
-  const weightLost = Math.round((user.startingWeight - user.weight) * 10) / 10;
-  const remainingWeight = Math.round((user.weight - user.targetWeight) * 10) / 10;
+  // Interactive Workout Timer State
+  const [timerSeconds, setTimerSeconds] = useState(45);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
 
-  // Calculate today's totals from meal records
-  const todayMeals = mealRecords; // recent logs
-  const todayCalories = todayMeals.reduce((acc, m) => acc + m.calories, 0);
-  const todayProtein = Math.round(todayMeals.reduce((acc, m) => acc + m.protein, 0));
-  const todayCarbs = Math.round(todayMeals.reduce((acc, m) => acc + m.carbs, 0));
-  const todayFat = Math.round(todayMeals.reduce((acc, m) => acc + m.fat, 0));
-  const todayFiber = Math.round(todayMeals.reduce((acc, m) => acc + m.fiber, 0));
+  // Stats
+  const totalWater = waterLogs.reduce((acc, log) => acc + log.amountMl, 0);
+  const totalCaloriesConsumed = mealLogs.reduce((acc, m) => acc + m.calories, 0);
 
-  const waterPercent = Math.min(100, Math.round((todayWaterMl / dailyWaterTargetMl) * 100));
-
-  // Habit completion today
-  const todayDate = new Date().toISOString().split('T')[0];
-  const completedHabitsToday = habits.filter(h => h.completedDates.includes(todayDate)).length;
-  const habitPercent = Math.round((completedHabitsToday / habits.length) * 100);
+  // Targets based on Goal
+  const calorieTarget = goalMode === 'muscle' ? 2450 : 1850;
+  const proteinTarget = goalMode === 'muscle' ? 140 : 95;
 
   return (
-    <div className="space-y-8 pb-16">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
-        <div>
-          <div className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md mb-1.5">
-            <Target className="w-3.5 h-3.5" />
-            <span>{language === 'am' ? 'የግል ዳሽቦርድ' : 'Personal Health Dashboard'}</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900">
-            {language === 'am' ? `እንኳን ደህና መጡ፣ ${user.name}!` : `Welcome back, ${user.name}!`}
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            {language === 'am'
-              ? 'የዕለት ተዕለት እድገትዎን፣ የተመገቡትን ምግብ እና የውሃ መጠንዎን እዚህ ይከታተሉ።'
-              : 'Monitor your weight trend, logged nutrition, daily activity, and hydration.'}
-          </p>
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
+      {/* 1. TOP HERO BANNER */}
+      <div className="bg-gradient-to-r from-emerald-800 via-teal-800 to-cyan-900 rounded-3xl p-6 md:p-10 text-white shadow-xl relative overflow-hidden">
+        <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-semibold mb-3">
+          <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+          <span>Fit Ethiopia • የጤና እና አካል ብቃት መመሪያ</span>
         </div>
+        <h1 className="text-3xl md:text-5xl font-black mb-2">
+          ሰላም {userProfile?.name || 'ጓደኛ'} 👋
+        </h1>
+        <p className="text-emerald-100 text-sm md:text-base max-w-2xl leading-relaxed">
+          የአካል ብቃት፣ የጡንቻ ግንባታ፣ የተመጣጠነ ምግብ እና የስፖርት ሳይንስ መመሪያዎ።
+        </p>
 
-        {/* Quick Actions */}
-        <div className="flex items-center gap-2 flex-wrap">
+        {/* Goal Switcher (Muscle Gain vs Fat Loss) */}
+        <div className="flex flex-wrap gap-3 mt-6 items-center">
+          <span className="text-xs font-bold text-emerald-200">የአሁን ግብዎ፡</span>
           <button
-            onClick={() => setActiveTab('food-diary')}
-            className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold flex items-center gap-1.5 transition"
+            onClick={() => setGoalMode('muscle')}
+            className={`px-4 py-2 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center gap-2 ${
+              goalMode === 'muscle'
+                ? 'bg-amber-400 text-gray-900 shadow-lg scale-105'
+                : 'bg-white/20 text-white hover:bg-white/30'
+            }`}
           >
-            <Plus className="w-3.5 h-3.5" />
-            <span>{language === 'am' ? 'ምግብ መዝግብ' : 'Log Food'}</span>
+            <span>💪 የጡንቻ ግንባታ (Muscle Gain)</span>
           </button>
           <button
-            onClick={() => setActiveTab('workouts')}
-            className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition"
+            onClick={() => setGoalMode('fat_loss')}
+            className={`px-4 py-2 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center gap-2 ${
+              goalMode === 'fat_loss'
+                ? 'bg-amber-400 text-gray-900 shadow-lg scale-105'
+                : 'bg-white/20 text-white hover:bg-white/30'
+            }`}
           >
-            <Dumbbell className="w-3.5 h-3.5" />
-            <span>{language === 'am' ? 'የዛሬ ልምምድ' : 'Today\'s Workout'}</span>
+            <span>⚖️ ስብ ማቃጠል (Fat Loss)</span>
           </button>
         </div>
       </div>
 
-      {/* Main Weight Progress Showcase Card */}
-      <div className="bg-gradient-to-br from-slate-900 via-slate-850 to-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-700/60">
-          <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">
-              {language === 'am' ? 'የእኔ እድገት (My Progress)' : 'My Weight Journey'}
+      {/* 2. NAVIGATION TABS */}
+      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-gray-200 dark:border-gray-700">
+        {[
+          { id: 'overview', label: '📊 ዋና ዳሽቦርድ (Overview)' },
+          { id: 'science', label: '🧠 ስፖርት ሳይንስና አናቶሚ (Science)' },
+          { id: 'fasting', label: '🌙 የጾም እና ረመዳን መመሪያ (Fasting)' },
+          { id: 'pricing', label: '💳 የደንበኝነት ክፍያ (Telebirr / CBE)' },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as any)}
+            className={`px-5 py-2.5 rounded-xl text-xs md:text-sm font-bold whitespace-nowrap transition-all ${
+              activeTab === tab.id
+                ? 'bg-emerald-600 text-white shadow-md'
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* 3. TAB CONTENT */}
+
+      {/* TAB A: OVERVIEW */}
+      {activeTab === 'overview' && (
+        <div className="space-y-8">
+          {/* Key Metrics */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {/* Calories Card */}
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold text-gray-500 uppercase">ዕለታዊ ካሎሪ</span>
+                <Flame className="w-5 h-5 text-amber-500" />
+              </div>
+              <div className="text-2xl font-black text-gray-900 dark:text-white">
+                {totalCaloriesConsumed} <span className="text-xs text-gray-400 font-normal">/ {calorieTarget} kcal</span>
+              </div>
+              <p className="text-[11px] text-emerald-600 font-bold mt-2">
+                {goalMode === 'muscle' ? '+350 kcal የጡንቻ ሰርፕለስ' : '-450 kcal የስብ ዴፊሲት'}
+              </p>
+            </div>
+
+            {/* Protein Card */}
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold text-gray-500 uppercase">የፕሮቲን መጠን</span>
+                <Activity className="w-5 h-5 text-emerald-500" />
+              </div>
+              <div className="text-2xl font-black text-gray-900 dark:text-white">
+                45g <span className="text-xs text-gray-400 font-normal">/ {proteinTarget}g</span>
+              </div>
+              <p className="text-[11px] text-gray-500 mt-2">እንቁላል፣ ስጋ፣ አተር፣ አጃ</p>
+            </div>
+
+            {/* Water Card */}
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold text-gray-500 uppercase">የውሃ ፍጆታ</span>
+                <Droplets className="w-5 h-5 text-cyan-500" />
+              </div>
+              <div className="text-2xl font-black text-gray-900 dark:text-white">
+                {(totalWater / 1000).toFixed(1)}L <span className="text-xs text-gray-400 font-normal">/ 2.8L</span>
+              </div>
+              <p className="text-[11px] text-cyan-600 font-bold mt-2">የጡንቻ ጥንካሬን ይጠብቃል</p>
+            </div>
+
+            {/* Workouts Card */}
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold text-gray-500 uppercase">የስፖርት ሁኔታ</span>
+                <Trophy className="w-5 h-5 text-purple-500" />
+              </div>
+              <div className="text-2xl font-black text-gray-900 dark:text-white">
+                {workoutLogs.length} <span className="text-xs text-gray-400 font-normal">ክፍለ-ጊዜዎች</span>
+              </div>
+              <p className="text-[11px] text-emerald-600 font-bold mt-2 flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>በጥሩ ሂደት ላይ ነዎት!</span>
+              </p>
+            </div>
+          </div>
+
+          {/* Quick Workout Timer Section */}
+          <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-3xl p-6 md:p-8 text-white shadow-lg flex flex-col md:flex-row items-center justify-between gap-6">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-400/20 text-amber-300 rounded-full text-xs font-bold mb-2">
+                <Zap className="w-3.5 h-3.5" />
+                <span>የቀጥታ ስፖርት ሰዓት ቆጣሪ (Live Interval Timer)</span>
+              </div>
+              <h3 className="text-xl md:text-2xl font-black">
+                የዛሬውን ፑሽ አፕ ወይም ፕላንክ አሁን ይጀምሩ!
+              </h3>
+              <p className="text-xs text-gray-400 mt-1 max-w-md">
+                ለእያንዳንዱ ሴት 45 ሰከንድ በመስራትና 60 ሰከንድ በማረፍ ጡንቻዎን ያሳድጉ።
+              </p>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="text-4xl font-black bg-gray-950 px-6 py-3 rounded-2xl border border-gray-700 text-emerald-400">
+                00:{timerSeconds < 10 ? `0${timerSeconds}` : timerSeconds}
+              </div>
+              <button
+                onClick={() => setIsTimerRunning(!isTimerRunning)}
+                className="px-6 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-gray-950 rounded-2xl font-bold text-sm flex items-center gap-2 shadow-lg shadow-emerald-500/20"
+              >
+                <Play className="w-4 h-4 fill-current" />
+                <span>{isTimerRunning ? 'አቁም' : 'ጀምር (Start)'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Home vs Gym Workouts Preview */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-sm">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-2xl">🏠</span>
+                <div>
+                  <h3 className="font-bold text-lg text-gray-900 dark:text-white">የቤት ውስጥ ስፖርት (Home Bodyweight)</h3>
+                  <p className="text-xs text-gray-500">ያለ ምንም እቃ የሚሰሩ ልምምዶች</p>
+                </div>
+              </div>
+              <ul className="space-y-2 text-xs text-gray-600 dark:text-gray-300">
+                <li className="p-2.5 bg-gray-50 dark:bg-gray-900 rounded-xl flex justify-between">
+                  <span>• ፑሽ አፕ (Push-ups) - ለደረት እና ትከሻ</span>
+                  <strong className="text-emerald-600">3 × 12 ድግግሞሽ</strong>
+                </li>
+                <li className="p-2.5 bg-gray-50 dark:bg-gray-900 rounded-xl flex justify-between">
+                  <span>• ስኳት (Bodyweight Squats) - ለእግር እና ዳሌ</span>
+                  <strong className="text-emerald-600">4 × 15 ድግግሞሽ</strong>
+                </li>
+                <li className="p-2.5 bg-gray-50 dark:bg-gray-900 rounded-xl flex justify-between">
+                  <span>• ፕላንክ (Plank) - ለሆድ እና ወገብ ጥንካሬ</span>
+                  <strong className="text-emerald-600">3 × 45 ሰከንድ</strong>
+                </li>
+              </ul>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-sm">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-2xl">🏋️‍♂️</span>
+                <div>
+                  <h3 className="font-bold text-lg text-gray-900 dark:text-white">የጂም ስፖርት (Gym Weights)</h3>
+                  <p className="text-xs text-gray-500">በክብደት የሚሰሩ የጡንቻ ማሳደጊያዎች</p>
+                </div>
+              </div>
+              <ul className="space-y-2 text-xs text-gray-600 dark:text-gray-300">
+                <li className="p-2.5 bg-gray-50 dark:bg-gray-900 rounded-xl flex justify-between">
+                  <span>• ቤንች ፕሬስ (Bench Press) - ለደረት</span>
+                  <strong className="text-emerald-600">4 × 8-10</strong>
+                </li>
+                <li className="p-2.5 bg-gray-50 dark:bg-gray-900 rounded-xl flex justify-between">
+                  <span>• ላት ፑልዳውን (Lat Pulldown) - ለጀርባ</span>
+                  <strong className="text-emerald-600">4 × 10-12</strong>
+                </li>
+                <li className="p-2.5 bg-gray-50 dark:bg-gray-900 rounded-xl flex justify-between">
+                  <span>• ባርቤል ስኳት (Barbell Squat) - ለእግር</span>
+                  <strong className="text-emerald-600">4 × 8-10</strong>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB B: SPORTS SCIENCE & ANATOMY */}
+      {activeTab === 'science' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-sm">
+            <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2">
+              የጡንቻ ህዋሳት እድገት (Hypertrophy Science)
+            </h3>
+            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed mb-4">
+              ክብደት ስናነሳ በጡንቻ ሴሎች ላይ ጥቃቅን ስብራቶች (Micro-tears) ይፈጠራሉ። በእረፍት ሰዓት በምንመገበው ፕሮቲን አማካኝነት ሴሎቹ ተመልሰው ሲገነቡ ከበፊቱ በበለጠ ወፍረውና ጠንክረው ያድጋሉ።
+            </p>
+            <div className="p-4 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl text-xs text-emerald-800 dark:text-emerald-300 border border-emerald-200">
+              <strong>ቁልፍ መርህ፡</strong> ተከታታይ የጫና ጭማሪ (Progressive Overload) - በየሳምንቱ ድግግሞሽን ወይም ክብደትን ማሳደግ።
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-sm">
+            <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2">
+              ዞን 2 ካርዲዮ እና ስብ ማቃጠል (Zone 2 Cardio)
+            </h3>
+            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed mb-4">
+              ስብ ለማቃጠል በከፍተኛ ፍጥነት መሮጥ አያስፈልግም! እየተነጋገሩ መስራት በሚያስችል የልብ ምት ፍጥነት (ፈጣን እርምጃ ወይም ረጋ ያለ ብስክሌት) ለ30-45 ደቂቃ መስራት ሰውነት በቀጥታ የተከማቸ ስብን እንዲያቃጥል ያደርጋል።
+            </p>
+            <div className="p-4 bg-cyan-50 dark:bg-cyan-950/40 rounded-2xl text-xs text-cyan-800 dark:text-cyan-300 border border-cyan-200">
+              <strong>ምክር፡</strong> በቀን ከ7,000 እስከ 10,000 እርምጃዎችን በእግር መጓዝ።
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB C: FASTING GUIDE */}
+      {activeTab === 'fasting' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-sm">
+            <h3 className="text-xl font-black text-emerald-700 dark:text-emerald-400 mb-2">
+              የኦርቶዶክስ አጽዋማት የአመጋገብ ስልት
+            </h3>
+            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed mb-4">
+              በጾም ወቅት የእንስሳት ተዋጽኦ ስለማይበላ ፕሮቲን እንዳይቀንስ ጥራጥሬዎችን አዋህደው ይመገቡ።
+            </p>
+            <ul className="space-y-2 text-xs text-gray-700 dark:text-gray-300">
+              <li className="p-2 bg-gray-50 dark:bg-gray-900 rounded-xl">🌱 <strong>አኩሪ አተር፡</strong> በ100 ግራም 36 ግራም ከፍተኛ ፕሮቲን</li>
+              <li className="p-2 bg-gray-50 dark:bg-gray-900 rounded-xl">🍲 <strong>የተቀቀለ ሽምብራ፡</strong> በ100 ግራም 19 ግራም ፕሮቲን</li>
+              <li className="p-2 bg-gray-50 dark:bg-gray-900 rounded-xl">🥣 <strong>ምስር ወጥ ከጤፍ እንጀራ ጋር፡</strong> የተሟላ አሚኖ አሲድ ይሰጣል</li>
+            </ul>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-sm">
+            <h3 className="text-xl font-black text-cyan-700 dark:text-cyan-400 mb-2">
+              የረመዳን ወቅት ስፖርት እና አመጋገብ
+            </h3>
+            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed mb-4">
+              በሱሁር ሰዓት በፋይበር እና በፕሮቲን የበለጸጉ ምግቦች (አጃ፣ እንቁላል) መመገብ የውሃ ጥምን ይቀንሳል።
+            </p>
+            <div className="p-4 bg-amber-50 dark:bg-amber-950/40 rounded-2xl text-xs text-amber-800 dark:text-amber-300 border border-amber-200">
+              <strong>የስፖርት ሰዓት፡</strong> ከኢፍጣር 1 ሰዓት በፊት ቀለል ያለ ካርዲዮ፤ ወይም ከኢፍጣር ምግብ ከ2 ሰዓት በኋላ የክብደት ስፖርት መስራት ይመረጣል።
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB D: PRICING (TELEBIRR / CBE) */}
+      {activeTab === 'pricing' && (
+        <div className="bg-white dark:bg-gray-800 p-6 md:p-10 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-xl max-w-3xl mx-auto">
+          <div className="text-center mb-8">
+            <span className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-bold">
+              👑 የደንበኝነት ምዝገባ (Pricing)
             </span>
-            <h2 className="text-xl sm:text-2xl font-black text-white mt-0.5">
-              {weightLost > 0 ? (
-                <span>
-                  {language === 'am'
-                    ? `እስካሁን ${weightLost} ኪሎ ቀንሰዋል! ድንቅ ጅምር ነው!`
-                    : `You have lost ${weightLost} kg so far! Great job!`}
-                </span>
-              ) : (
-                <span>{language === 'am' ? 'የክብደት ጉዞዎ በመሻሻል ላይ ነው' : 'Your fitness journey is on track'}</span>
-              )}
+            <h2 className="text-3xl font-black text-gray-900 dark:text-white mt-2">
+              የፕሮ አባልነት በቴሌብር እና በሲቢኢ ብር
             </h2>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/30">
-              {language === 'am' ? bmiData.categoryAmharic : bmiData.categoryEnglish}
-            </span>
-            <span className="px-3 py-1 rounded-full bg-slate-800 text-slate-300 text-xs font-medium border border-slate-700">
-              BMI: {bmiData.bmi}
-            </span>
-          </div>
-        </div>
 
-        {/* 3 Weight Stat Pillars */}
-        <div className="grid grid-cols-3 gap-3 sm:gap-6 text-center">
-          <div className="bg-slate-800/80 p-3 sm:p-4 rounded-2xl border border-slate-700/60">
-            <span className="text-[10px] sm:text-xs text-slate-400 font-semibold block">
-              {language === 'am' ? 'የመነሻ ክብደት' : 'Starting Weight'}
-            </span>
-            <span className="text-lg sm:text-3xl font-black text-slate-200 mt-1 block">
-              {user.startingWeight} <span className="text-xs font-normal">kg</span>
-            </span>
-          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+            <div className="p-6 rounded-3xl border-2 border-emerald-500 bg-emerald-50/30 dark:bg-emerald-950/20">
+              <h3 className="font-bold text-lg text-emerald-800 dark:text-emerald-300">ወርሃዊ ፕሮ (Monthly Pro)</h3>
+              <div className="text-3xl font-black text-gray-900 dark:text-white my-2">299 ብር <span className="text-xs text-gray-400 font-normal">/በወር</span></div>
+              <ul className="space-y-1.5 text-xs text-gray-600 dark:text-gray-300 mt-4">
+                <li>✔️ ሁሉም የቤትና ጂም ስፖርቶች</li>
+                <li>✔️ ያልተገደበ AI አሰልጣኝ</li>
+                <li>✔️ የጾም እና ረመዳን እቅዶች</li>
+              </ul>
+            </div>
 
-          <div className="bg-emerald-950/80 p-3 sm:p-4 rounded-2xl border border-emerald-500/40 shadow-inner">
-            <span className="text-[10px] sm:text-xs text-emerald-300 font-bold block">
-              {language === 'am' ? 'የአሁኑ ክብደት' : 'Current Weight'}
-            </span>
-            <span className="text-xl sm:text-4xl font-black text-emerald-400 mt-1 block">
-              {user.weight} <span className="text-xs font-normal">kg</span>
-            </span>
-          </div>
-
-          <div className="bg-slate-800/80 p-3 sm:p-4 rounded-2xl border border-slate-700/60">
-            <span className="text-[10px] sm:text-xs text-slate-400 font-semibold block">
-              {language === 'am' ? 'የታለመው ክብደት' : 'Target Weight'}
-            </span>
-            <span className="text-lg sm:text-3xl font-black text-amber-300 mt-1 block">
-              {user.targetWeight} <span className="text-xs font-normal">kg</span>
-            </span>
-          </div>
-        </div>
-
-        {/* Progress Bar Display */}
-        <div className="space-y-2">
-          <div className="flex justify-between text-xs sm:text-sm font-bold">
-            <span className="text-slate-300">
-              {language === 'am' ? 'የግብ ስኬት መቶኛ (Progress)' : 'Progress towards goal'}
-            </span>
-            <span className="text-emerald-400 font-mono text-base">{bmiData.progressPercent}%</span>
-          </div>
-
-          <div className="w-full h-4 bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-700">
-            <div
-              className="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-400 rounded-full transition-all duration-1000 relative shadow-sm"
-              style={{ width: `${Math.max(5, bmiData.progressPercent)}%` }}
-            >
-              <div className="absolute inset-0 bg-white/20 animate-pulse rounded-full" />
+            <div className="p-6 rounded-3xl border-2 border-amber-400 bg-amber-50/30 dark:bg-amber-950/20">
+              <span className="text-[10px] bg-amber-400 text-gray-900 font-black px-2 py-0.5 rounded-full uppercase">30% ቅናሽ</span>
+              <h3 className="font-bold text-lg text-amber-800 dark:text-amber-300 mt-1">ዓመታዊ ቪአይፒ (Yearly VIP)</h3>
+              <div className="text-3xl font-black text-gray-900 dark:text-white my-2">1,999 ብር <span className="text-xs text-gray-400 font-normal">/በዓመት</span></div>
+              <ul className="space-y-1.5 text-xs text-gray-600 dark:text-gray-300 mt-4">
+                <li>✔️ ሁሉንም የፕሮ ጥቅሞች</li>
+                <li>✔️ የግል የአመጋገብ ማክሮ እቅድ</li>
+                <li>✔️ የ24/7 የቪአይፒ ድጋፍ</li>
+              </ul>
             </div>
           </div>
 
-          <div className="flex justify-between text-[11px] text-slate-400 font-medium pt-1">
-            <span>
-              {language === 'am' ? `የተቀነሰ፦ ${weightLost} kg` : `Lost: ${weightLost} kg`}
-            </span>
-            <span>
-              {language === 'am' ? `የቀረ፦ ${remainingWeight} kg` : `Remaining: ${remainingWeight} kg`}
-            </span>
-          </div>
-        </div>
-
-        {/* Visual Progress Blocks representation */}
-        <div className="p-3 bg-slate-950/60 rounded-xl font-mono text-xs text-emerald-300 flex items-center justify-between">
-          <span className="text-slate-400">{language === 'am' ? 'የእድገት አሞሌ፦' : 'Progress Bar:'}</span>
-          <span className="tracking-widest font-bold text-sm">
-            {'█'.repeat(Math.round(bmiData.progressPercent / 10))}
-            {'░'.repeat(10 - Math.round(bmiData.progressPercent / 10))} {bmiData.progressPercent}%
-          </span>
-        </div>
-      </div>
-
-      {/* 4 Core Trackers Quick Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* 1. Weekly Activity Tracker */}
-        <div 
-          onClick={() => setActiveTab('workouts')}
-          className="bg-white p-5 rounded-2xl border border-slate-200 hover:border-emerald-500 cursor-pointer transition shadow-xs space-y-3"
-        >
-          <div className="flex items-center justify-between">
-            <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
-              <Dumbbell className="w-5 h-5" />
-            </div>
-            <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">
-              {weeklyWorkoutsCompleted}/4 {language === 'am' ? 'ቀናት' : 'days'}
-            </span>
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-slate-800">
-              {language === 'am' ? 'የሳምንቱ እንቅስቃሴ' : 'Weekly Activity'}
-            </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              {weeklyWorkoutsCompleted >= 4
-                ? (language === 'am' ? 'ይህ ሳምንት 4/4 የእንቅስቃሴ ቀናት ተጠናቋል!' : 'All 4 workout days completed this week!')
-                : (language === 'am' ? `${4 - weeklyWorkoutsCompleted} ልምምዶች ቀርተዋል` : `${4 - weeklyWorkoutsCompleted} workouts remaining`)}
-            </p>
-          </div>
-          <div className="flex gap-1.5 pt-1">
-            {[1, 2, 3, 4].map((day) => (
-              <div
-                key={day}
-                className={`h-2 flex-1 rounded-full ${
-                  day <= weeklyWorkoutsCompleted ? 'bg-emerald-500' : 'bg-slate-200'
-                }`}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* 2. Water Tracker */}
-        <div 
-          onClick={() => setActiveTab('water-tracker')}
-          className="bg-white p-5 rounded-2xl border border-slate-200 hover:border-blue-500 cursor-pointer transition shadow-xs space-y-3"
-        >
-          <div className="flex items-center justify-between">
-            <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center">
-              <Droplet className="w-5 h-5" />
-            </div>
-            <span className="text-xs font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700">
-              {waterPercent}%
-            </span>
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-slate-800">
-              {language === 'am' ? 'የዕለት የውሃ መጠጫ' : 'Daily Water Goal'}
-            </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              {(todayWaterMl / 1000).toFixed(1)} L / {(dailyWaterTargetMl / 1000).toFixed(1)} L
-            </p>
-          </div>
-          <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-            <div
-              className="bg-blue-500 h-full rounded-full transition-all duration-500"
-              style={{ width: `${waterPercent}%` }}
-            />
-          </div>
-        </div>
-
-        {/* 3. Calories & Nutrition Summary */}
-        <div 
-          onClick={() => setActiveTab('food-diary')}
-          className="bg-white p-5 rounded-2xl border border-slate-200 hover:border-amber-500 cursor-pointer transition shadow-xs space-y-3"
-        >
-          <div className="flex items-center justify-between">
-            <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
-              <Flame className="w-5 h-5" />
-            </div>
-            <span className="text-xs font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-700">
-              {todayCalories} kcal
-            </span>
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-slate-800">
-              {language === 'am' ? 'የተመገቡት ካሎሪ' : 'Daily Calories'}
-            </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              {language === 'am' ? `ከታለመው ${user.dailyCalorieTarget || 1950} kcal` : `Target: ${user.dailyCalorieTarget || 1950} kcal`}
-            </p>
-          </div>
-          <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-            <div
-              className="bg-amber-500 h-full rounded-full"
-              style={{ width: `${Math.min(100, Math.round((todayCalories / (user.dailyCalorieTarget || 1950)) * 100))}%` }}
-            />
-          </div>
-        </div>
-
-        {/* 4. Healthy Habits */}
-        <div 
-          onClick={() => setActiveTab('habits')}
-          className="bg-white p-5 rounded-2xl border border-slate-200 hover:border-purple-500 cursor-pointer transition shadow-xs space-y-3"
-        >
-          <div className="flex items-center justify-between">
-            <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center">
-              <CheckCircle2 className="w-5 h-5" />
-            </div>
-            <span className="text-xs font-bold px-2 py-0.5 rounded bg-purple-50 text-purple-700">
-              {completedHabitsToday}/{habits.length}
-            </span>
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-slate-800">
-              {language === 'am' ? 'የዕለት ልማዶች' : 'Daily Habits'}
-            </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              {language === 'am' ? `${habitPercent}% ተጠናቋል` : `${habitPercent}% completed`}
-            </p>
-          </div>
-          <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-            <div
-              className="bg-purple-500 h-full rounded-full"
-              style={{ width: `${habitPercent}%` }}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Two Column Layout: Today's Nutrients & Recent Food Logs */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Nutrients Breakdown */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-            <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <Utensils className="w-4 h-4 text-emerald-600" />
-              <span>{language === 'am' ? 'የዕለት ንጥረ-ነገሮች ድምር' : 'Today\'s Macro Breakdown'}</span>
-            </h3>
-            <span className="text-xs text-slate-600">
-              {todayMeals.length} {language === 'am' ? 'ምግቦች ተመዝግበዋል' : 'meals logged'}
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
-              <span className="text-[10px] uppercase font-bold text-slate-600 block">
-                {language === 'am' ? 'ፕሮቲን' : 'Protein'}
-              </span>
-              <span className="text-xl font-extrabold text-emerald-700 mt-1 block">{todayProtein}g</span>
-            </div>
-
-            <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
-              <span className="text-[10px] uppercase font-bold text-slate-600 block">
-                {language === 'am' ? 'ካርቦሃይድሬት' : 'Carbs'}
-              </span>
-              <span className="text-xl font-extrabold text-blue-700 mt-1 block">{todayCarbs}g</span>
-            </div>
-
-            <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
-              <span className="text-[10px] uppercase font-bold text-slate-600 block">
-                {language === 'am' ? 'ቅባት' : 'Fat'}
-              </span>
-              <span className="text-xl font-extrabold text-amber-700 mt-1 block">{todayFat}g</span>
-            </div>
-
-            <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
-              <span className="text-[10px] uppercase font-bold text-slate-600 block">
-                {language === 'am' ? 'ፋይበር' : 'Fiber'}
-              </span>
-              <span className="text-xl font-extrabold text-teal-700 mt-1 block">{todayFiber}g</span>
+          <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl flex items-center justify-between text-xs font-bold text-gray-700 dark:text-gray-300">
+            <span>ክፍያ የሚፈጸምበት፡</span>
+            <div className="flex gap-2">
+              <span className="px-2.5 py-1 bg-blue-600 text-white rounded-lg">Telebirr</span>
+              <span className="px-2.5 py-1 bg-purple-700 text-white rounded-lg">CBE Birr</span>
+              <span className="px-2.5 py-1 bg-emerald-600 text-white rounded-lg">Chapa</span>
             </div>
           </div>
-
-          <div className="p-3.5 bg-emerald-50/70 border border-emerald-200/70 rounded-xl text-xs text-emerald-900 leading-relaxed">
-            <span className="font-bold mr-1">💡 {language === 'am' ? 'የአመጋገብ ግምገማ፦' : 'Nutritional Note:'}</span>
-            {language === 'am'
-              ? 'የዛሬው ምግብዎ ጥሩ የፋይበር እና የፕሮቲን መጠን ይዟል። ተጨማሪ ንጹህ ውሃ በመጠጣት የምግብ መፈጨትን ማገዝ ይችላሉ።'
-              : 'Your meals today provide excellent prebiotic fiber and steady protein. Continue drinking water throughout the afternoon.'}
-          </div>
         </div>
-
-        {/* Quick Water Tracker Widget */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-            <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <Droplet className="w-4 h-4 text-blue-600" />
-              <span>{language === 'am' ? 'ፈጣን የውሃ መጨመሪያ' : 'Quick Water Logger'}</span>
-            </h3>
-            <span className="text-xs font-bold text-blue-700">
-              {(todayWaterMl / 1000).toFixed(1)} L / {(dailyWaterTargetMl / 1000).toFixed(1)} L
-            </span>
-          </div>
-
-          <p className="text-xs text-slate-500">
-            {language === 'am'
-              ? 'በየቀኑ የሚጠጡትን ውሃ በአንድ ጠቅታ ይመዝገቡ። በቂ ውሃ መጠጣት ሜታቦሊዝምን ያነቃቃል!'
-              : 'Add water intake with single tap. Adequate hydration optimizes metabolism and digestive efficiency.'}
-          </p>
-
-          <div className="grid grid-cols-3 gap-2.5">
-            <button
-              onClick={() => addWaterMl(250)}
-              className="p-3 rounded-xl border border-blue-200 hover:border-blue-400 bg-blue-50/60 hover:bg-blue-100 text-blue-900 font-bold text-xs flex flex-col items-center gap-1 transition"
-            >
-              <Droplet className="w-4 h-4 text-blue-600" />
-              <span>+250 ml</span>
-              <span className="text-[10px] text-blue-600 font-normal">
-                {language === 'am' ? '1 ብርጭቆ' : '1 Cup'}
-              </span>
-            </button>
-
-            <button
-              onClick={() => addWaterMl(500)}
-              className="p-3 rounded-xl border border-blue-200 hover:border-blue-400 bg-blue-50/60 hover:bg-blue-100 text-blue-900 font-bold text-xs flex flex-col items-center gap-1 transition"
-            >
-              <Droplet className="w-4 h-4 text-blue-600" />
-              <span>+500 ml</span>
-              <span className="text-[10px] text-blue-600 font-normal">
-                {language === 'am' ? '1 ሃይላንድ' : '1 Bottle'}
-              </span>
-            </button>
-
-            <button
-              onClick={() => addWaterMl(1000)}
-              className="p-3 rounded-xl border border-blue-200 hover:border-blue-400 bg-blue-50/60 hover:bg-blue-100 text-blue-900 font-bold text-xs flex flex-col items-center gap-1 transition"
-            >
-              <Droplet className="w-4 h-4 text-blue-600" />
-              <span>+1000 ml</span>
-              <span className="text-[10px] text-blue-600 font-normal">
-                {language === 'am' ? '1 ሊትር' : '1 Liter'}
-              </span>
-            </button>
-          </div>
-
-          <div className="pt-2 flex justify-between items-center text-xs">
-            <button
-              onClick={() => setActiveTab('water-tracker')}
-              className="text-blue-700 hover:underline font-bold"
-            >
-              {language === 'am' ? 'ሙሉ የውሃ ገጽ ክፈት →' : 'View Full Water Page →'}
-            </button>
-            <button
-              onClick={() => addWaterMl(-250)}
-              className="text-slate-600 hover:text-rose-600 transition"
-              title="Undo last cup"
-            >
-              {language === 'am' ? 'ቀንስ (-250ml)' : 'Undo (-250ml)'}
-            </button>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 };
